@@ -48,8 +48,8 @@ void reconnect()
       topicReturnStatus = "mqtt/agritech/status/" + getMacAddress();
       topicReceiveAll = "mqtt/agritech/openall/" + getMacAddress();
       Serial.println(topicReceiveAll);
-      client.subscribe(topicReceiveOne.c_str());
-      client.subscribe(topicReceiveAll.c_str());
+      client.subscribe(topicReceiveOne.c_str(), 0);
+      client.subscribe(topicReceiveAll.c_str(), 0);
     }
     else
     {
@@ -59,8 +59,28 @@ void reconnect()
   }
 }
 
+// void my_interrupt_handler()
+// {
+//   static unsigned long last_interrupt_time = 0;
+//   unsigned long interrupt_time = millis();
+//   if (interrupt_time - last_interrupt_time > 200)
+//   {
+//   }
+//   last_interrupt_time = interrupt_time;
+// }
+
 void sendOne(String comandReceived)
 {
+  // OPEN
+  // PCF.write(6, HIGH);
+  // PCF.write(7, LOW);
+  // PCF.write(0, LOW);
+
+  // CLOSE
+  // PCF.write(6, LOW);
+  // PCF.write(7, HIGH);
+  // PCF.write(0, LOW); // this pin is selector
+
   StaticJsonDocument<128> doc;
   deserializeJson(doc, comandReceived);
   int ports_pcf_20[] = {doc["pin"], doc["state"]};
@@ -70,20 +90,24 @@ void sendOne(String comandReceived)
     Serial.print("Abrindo:");
     Serial.println(ports_pcf_20[0]);
     PCF.write(6, HIGH);
-    PCF.write(ports_pcf_20[0], HIGH);
-    delay(8000);
-    PCF.write(6, LOW);
+    PCF.write(7, LOW);
     PCF.write(ports_pcf_20[0], LOW);
+    delay(8000);
+    PCF.write(6, HIGH);
+    PCF.write(7, HIGH);
+    PCF.write(ports_pcf_20[0], HIGH);
   }
   else if (ports_pcf_20[1] == 0)
   {
-    Serial.print("fechando:");
+    Serial.print("Fechando:");
     Serial.println(ports_pcf_20[0]);
+    PCF.write(6, LOW);
+    PCF.write(7, HIGH);
+    PCF.write(ports_pcf_20[0], LOW);
+    delay(8000);
+    PCF.write(6, HIGH);
     PCF.write(7, HIGH);
     PCF.write(ports_pcf_20[0], HIGH);
-    delay(8000);
-    PCF.write(7, LOW);
-    PCF.write(ports_pcf_20[0], LOW);
   }
 }
 
@@ -96,8 +120,41 @@ void sendAll(String comandReceived)
 
   if (ports_pcf_20[0] == 1)
   {
-    PCF.write(7, LOW);
     Serial.println("abrindo todas");
+    PCF.write(6, HIGH);
+    PCF.write(7, LOW);
+    PCF.write(0, LOW);
+    PCF.write(6, LOW);
+    PCF.write(1, LOW);
+    PCF.write(2, LOW);
+    PCF.write(3, LOW);
+    PCF.write(4, LOW);
+    PCF.write(5, LOW);
+    delay(8000);
+    PCF.write(6, HIGH);
+    PCF.write(7, HIGH);
+    PCF.write(0, HIGH);
+    PCF.write(6, HIGH);
+    PCF.write(1, HIGH);
+    PCF.write(2, HIGH);
+    PCF.write(3, HIGH);
+    PCF.write(4, HIGH);
+    PCF.write(5, HIGH);
+  }
+
+  if (ports_pcf_20[0] == 0)
+  {
+    Serial.println("fechando:");
+    PCF.write(7, HIGH);
+    PCF.write(6, LOW);
+    PCF.write(0, LOW);
+    PCF.write(1, LOW);
+    PCF.write(2, LOW);
+    PCF.write(3, LOW);
+    PCF.write(4, LOW);
+    PCF.write(5, LOW);
+    delay(8000);
+    PCF.write(7, HIGH);
     PCF.write(6, HIGH);
     PCF.write(0, HIGH);
     PCF.write(1, HIGH);
@@ -105,35 +162,6 @@ void sendAll(String comandReceived)
     PCF.write(3, HIGH);
     PCF.write(4, HIGH);
     PCF.write(5, HIGH);
-    delay(8000);
-    PCF.write(6, LOW);
-    PCF.write(0, LOW);
-    PCF.write(1, LOW);
-    PCF.write(2, LOW);
-    PCF.write(3, LOW);
-    PCF.write(4, LOW);
-    PCF.write(5, LOW);
-  }
-
-  if (ports_pcf_20[0] == 0)
-  {
-    PCF.write(6, LOW);
-    Serial.println("fechando:");
-    PCF.write(7, HIGH);
-    PCF.write(0, HIGH);
-    PCF.write(1, HIGH);
-    PCF.write(2, HIGH);
-    PCF.write(3, HIGH);
-    PCF.write(4, HIGH);
-    PCF.write(5, HIGH);
-    delay(8000);
-    PCF.write(7, LOW);
-    PCF.write(0, LOW);
-    PCF.write(1, LOW);
-    PCF.write(2, LOW);
-    PCF.write(3, LOW);
-    PCF.write(4, LOW);
-    PCF.write(5, LOW);
   }
 }
 
@@ -189,9 +217,9 @@ void connectInPCF(void)
   if (PCF.isConnected())
   {
     Serial.println("PCF8574 is connected");
-    for (size_t i = 0; i < 7; i++)
+    for (size_t i = 0; i == 7; i++)
     {
-      PCF.write(i, LOW);
+      PCF.write(i, HIGH);
       delay(100);
     }
   }
