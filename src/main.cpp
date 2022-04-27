@@ -121,10 +121,9 @@ void sendAll(String comandReceived)
   if (ports_pcf_20[0] == 1)
   {
     Serial.println("abrindo todas");
-    PCF.write(6, HIGH);
     PCF.write(7, LOW);
+    PCF.write(6, HIGH);
     PCF.write(0, LOW);
-    PCF.write(6, LOW);
     PCF.write(1, LOW);
     PCF.write(2, LOW);
     PCF.write(3, LOW);
